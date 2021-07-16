@@ -133,7 +133,9 @@ class MoneyMaskedTextController extends TextEditingController {
         this.thousandSeparator = '.',
         this.rightSymbol = '',
         this.leftSymbol = '',
-        this.precision = 2}) {
+        this.precision = 2,
+        this.acceptNegativeNumber = false,
+      }) {
     _validateConfig();
 
     this.addListener(() {
@@ -149,6 +151,7 @@ class MoneyMaskedTextController extends TextEditingController {
   final String rightSymbol;
   final String leftSymbol;
   final int precision;
+  final bool acceptNegativeNumber;
 
   Function afterChange = (String maskedValue, double rawValue) {};
 
@@ -165,6 +168,12 @@ class MoneyMaskedTextController extends TextEditingController {
     }
 
     String masked = this._applyMask(valueToUse);
+
+    if(_isNegativeNumber) {
+      masked = '-' + masked;
+    } else {
+      masked.replaceAll('-', '');
+    }
 
     if (rightSymbol.length > 0) {
       masked += rightSymbol;
@@ -184,12 +193,16 @@ class MoneyMaskedTextController extends TextEditingController {
   }
 
   double get numberValue {
+
     List<String> parts = _getOnlyNumbers(this.text).split('').toList(growable: true);
 
     parts.insert(parts.length - precision, '.');
 
     return double.parse(parts.join());
   }
+
+  bool get _isNegativeNumber => acceptNegativeNumber && text.contains('-') && text.split('').where((e) => e == '-').length < 2;
+
 
   _validateConfig() {
     bool rightSymbolHasNumbers = _getOnlyNumbers(this.rightSymbol).length > 0;
